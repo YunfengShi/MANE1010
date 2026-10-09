@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Force Components from Two Angles · MANE 1010</title>
+<meta name="description" content="Practice resolving a 3D force into x, y and z components from two angles, with randomly generated problems.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: drafting sheet. Header, then practice: figure (left) + questions (right), stacking on phones. */
+:root{
+  --paper:#f7f9fb; --sheet:#ffffff; --ink:#18232e; --muted:#5a6876; --rule:#d8e0e7;
+  --grid:rgba(47,111,159,.07); --accent:#b3102b; --link:#2f6f9f; --link-ink:#ffffff;
+  --ok:#1d7f45; --ok-bg:rgba(29,127,69,.10); --bad:#c0303c; --bad-bg:rgba(192,48,60,.09);
+  --x:#c8323c; --y:#1f8a4c; --z:#2563c9;
+  --fig-bg:#fbfcfd; --fig-axis:#3a4652; --fig-force:#111820; --fig-plane1:rgba(110,175,225,.30);
+  --fig-plane2:rgba(110,175,225,.18); --fig-dash:#4a86b5; --fig-arc:#1f5f8b;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --math:"Cambria Math",Cambria,"STIX Two Math",Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11171d; --sheet:#182029; --ink:#e4eaf0; --muted:#9aa8b5; --rule:#2c3946;
+    --grid:rgba(120,170,210,.06); --accent:#ff5a6e; --link:#7fb6e0; --link-ink:#0f161c;
+    --ok:#4cc27e; --ok-bg:rgba(76,194,126,.13); --bad:#ff6b76; --bad-bg:rgba(255,107,118,.12);
+    --x:#ff6b6b; --y:#4cc27e; --z:#6fa1ff;
+    --fig-bg:#141b22; --fig-axis:#aab6c2; --fig-force:#f2f5f8; --fig-plane1:rgba(110,175,225,.24);
+    --fig-plane2:rgba(110,175,225,.13); --fig-dash:#7fb6e0; --fig-arc:#9fd0f5; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11171d; --sheet:#182029; --ink:#e4eaf0; --muted:#9aa8b5; --rule:#2c3946;
+  --grid:rgba(120,170,210,.06); --accent:#ff5a6e; --link:#7fb6e0; --link-ink:#0f161c;
+  --ok:#4cc27e; --ok-bg:rgba(76,194,126,.13); --bad:#ff6b76; --bad-bg:rgba(255,107,118,.12);
+  --x:#ff6b6b; --y:#4cc27e; --z:#6fa1ff;
+  --fig-bg:#141b22; --fig-axis:#aab6c2; --fig-force:#f2f5f8; --fig-plane1:rgba(110,175,225,.24);
+  --fig-plane2:rgba(110,175,225,.13); --fig-dash:#7fb6e0; --fig-arc:#9fd0f5; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;color:var(--ink);font:16px/1.6 var(--body);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 40px}
+a{color:var(--link)}
+.home{font:500 14px var(--mono);letter-spacing:.04em;text-decoration:none}
+.home:hover{text-decoration:underline}
+header{display:grid;gap:8px;padding:18px 0 22px;border-bottom:2px solid var(--ink)}
+h1{margin:0;font:700 clamp(30px,5vw,46px)/1.08 var(--display);text-wrap:balance}
+.lede{margin:0;max-width:66ch;color:var(--muted)}
+h2{margin:30px 0 14px;font:600 13px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+sub{font-size:.72em}
+.m{font-family:var(--math);font-size:1.06em;white-space:nowrap}
+
+.eqs{display:grid;gap:2px;margin:6px 0;padding:8px 10px;background:var(--paper);border-radius:6px;font-family:var(--math);font-size:15.5px;overflow-x:auto}
+
+/* practice */
+.practice{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:880px){.practice{grid-template-columns:minmax(0,1fr)}}
+.figbox{position:sticky;top:12px;display:grid;gap:8px;min-width:0}
+@media (max-width:880px){.figbox{position:static}}
+.fig{position:relative;width:100%;max-width:100%;aspect-ratio:1/0.92;background:var(--fig-bg);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.fig canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.fig canvas.drag{cursor:grabbing}
+.figbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+
+.panel{display:grid;gap:16px;min-width:0}
+.prob{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:16px 18px}
+.pnum{font:500 12.5px var(--mono);letter-spacing:.06em;color:var(--accent)}
+.prob p{margin:4px 0 0}
+.given{font-size:18px}
+details{margin-top:10px;font-size:15px}
+summary{cursor:pointer;color:var(--link);font-weight:500}
+details ul{margin:8px 0 0;padding-left:20px}
+
+fieldset{margin:0;min-width:0;border:1px solid var(--rule);border-radius:8px;padding:12px 14px 14px;background:var(--sheet)}
+legend{padding:0 6px;font:600 17px var(--math)}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choice{position:relative;display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--rule);
+  border-radius:6px;cursor:pointer;font-variant-numeric:tabular-nums;background:var(--paper);transition:border-color .12s}
+.choice:hover{border-color:var(--link)}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice .let{font:500 12px var(--mono);color:var(--muted);width:20px;height:20px;border-radius:50%;border:1px solid var(--rule);display:grid;place-items:center}
+.choice:has(input:checked){border-color:var(--link);box-shadow:inset 0 0 0 1px var(--link)}
+.choice:has(input:checked) .let{background:var(--link);border-color:var(--link);color:var(--link-ink)}
+.choice:has(input:focus-visible){outline:2px solid var(--link);outline-offset:2px}
+.choice.right{border-color:var(--ok);background:var(--ok-bg);box-shadow:inset 0 0 0 1px var(--ok)}
+.choice.right .let{background:var(--ok);border-color:var(--ok);color:var(--sheet)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-bg);box-shadow:inset 0 0 0 1px var(--bad)}
+.choice.wrong .let{background:var(--bad);border-color:var(--bad);color:var(--sheet)}
+.choice .fx{font-family:var(--math);font-size:16px;white-space:nowrap}
+.verdict{margin:8px 0 0;font-size:14px;font-weight:500;min-height:1.4em}
+.verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:600 14.5px var(--body);border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--rule);background:var(--sheet);color:var(--ink)}
+button:hover{border-color:var(--link)}
+button.primary{background:var(--link);border-color:var(--link);color:var(--link-ink)}
+button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+button.small{font-size:13px;padding:5px 10px;font-weight:500}
+.score{font-size:14.5px;color:var(--muted)}
+
+.solution{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--ok);border-radius:8px;padding:14px 18px}
+.solution h3{margin:0 0 8px;font:600 18px var(--display)}
+.solution h4{margin:12px 0 4px;font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.solution p{margin:0 0 4px;font-size:15px}
+.solution .eqs{background:var(--paper)}
+.result{font-family:var(--math);font-size:17px;margin:8px 0 2px;overflow-x:auto}
+footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:13.5px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="./">← MANE 1010</a>
+  <header>
+    <h1>Force Components from Two Angles</h1>
+    <p class="lede">A force in 3D is often given by two angles: one that tilts it out of a coordinate plane, and one that sets its direction inside that plane. Pick the expression for each component, sign included.</p>
+  </header>
+
+  <h2>Practice</h2>
+  <div class="practice">
+    <div class="figbox">
+      <div class="fig"><canvas id="fig" aria-label="3D figure of the force F with its projection triangles and the two angles"></canvas></div>
+      <div class="figbar"><button id="reset-view" class="small" type="button">Reset view</button><span>Drag to rotate · scroll or pinch to zoom</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="prob">
+        <div class="pnum" id="pnum">Problem</div>
+        <p class="given" id="given"></p>
+        <p>Choose the expression for each component of F. Read the angles and directions from the figure; each question has one correct choice.</p>
+        <details><summary>Describe the figure in words</summary><ul id="words"></ul></details>
+      </div>
+
+      <form id="quiz" autocomplete="off">
+        <div class="panel" id="questions"></div>
+      </form>
+
+      <div class="actions">
+        <button class="primary" id="check" type="button">Check answers</button>
+        <button id="show" type="button">Show answer</button>
+        <button id="next" type="button">New problem</button>
+        <span class="score" id="score" aria-live="polite"></span>
+      </div>
+
+      <div class="solution" id="solution" hidden></div>
+    </div>
+  </div>
+
+  <footer>MANE 1010 · Essence of Engineering Mechanics · Rensselaer Polytechnic Institute</footer>
+</div>
+
+<script>
+(function(){
+const AX = 'xyz', deg = Math.PI/180;
+const ANG = [15,20,25,30,35,40,50,55,60,65,70,75];
+const PLANE = ['y–z','x–z','x–y'];           // plane perpendicular to x, y, z
+const $ = id => document.getElementById(id);
+
+// ---------- random problem
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffle(rand, arr){const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+const fmt = x => (x<0?'−':'') + Math.abs(x).toFixed(1);
+const sgnS = s => s<0 ? '−' : '+';
+function formula(c, pr){                       // e.g. "−F cos 30° sin 40°"
+  const [a,b]=c.t, parts=['F'];
+  if(a) parts.push(`${a} ${pr.phi}°`); if(b) parts.push(`${b} ${pr.theta}°`);
+  return (c.s<0?'−':'') + parts.join(' ');
+}
+
+function generate(seed){
+  const rand = mulberry32(seed), pick = a => a[Math.floor(rand()*a.length)];
+  const P = pick([0,1,2]), others = [0,1,2].filter(k=>k!==P), Q = pick(others), R = others.find(k=>k!==Q);
+  const sP = pick([1,-1]), sQ = pick([1,-1]), sR = pick([1,-1]);
+  const mode = pick(['plane','axis']);
+  const phi = pick(ANG), theta = pick(ANG.filter(a=>a!==phi && a+phi!==90));   // distinct, not complementary
+  const F = 10*Math.round((100 + rand()*500)/10);
+  const sp=Math.sin(phi*deg), cp=Math.cos(phi*deg), st=Math.sin(theta*deg), ct=Math.cos(theta*deg);
+  const aP = mode==='plane' ? F*sp : F*cp, aPerp = mode==='plane' ? F*cp : F*sp;
+  const comp = [0,0,0]; comp[P]=sP*aP; comp[Q]=sQ*aPerp*ct; comp[R]=sR*aPerp*st;
+  const pr = {seed,F,P,Q,R,sP,sQ,sR,mode,phi,theta,aP,aPerp,comp};
+  // 5 formula choices per component: the answer, its sign flip, and trig mix-ups
+  const fac = {sin:t=>Math.sin(t*deg), cos:t=>Math.cos(t*deg)};
+  const TERMS = [['sin',null],['cos',null],['cos','cos'],['cos','sin'],['sin','cos'],['sin','sin'],[null,'cos'],[null,'sin']];
+  const val = (sg,[a,b]) => sg*F*(a?fac[a](phi):1)*(b?fac[b](theta):1);
+  const right = [0,0,0];
+  right[P] = mode==='plane' ? ['sin',null] : ['cos',null];
+  const perpF = mode==='plane' ? 'cos' : 'sin';
+  right[Q] = [perpF,'cos']; right[R] = [perpF,'sin'];
+  const sg = [0,0,0]; sg[P]=sP; sg[Q]=sQ; sg[R]=sR;
+  pr.right = right.map((t,k)=>({s:sg[k], t}));
+  pr.choices = [0,1,2].map(k=>{
+    const ans = {s:sg[k], t:right[k]}, key = c => c.s+(c.t[0]||'-')+(c.t[1]||'-');
+    const vkey = c => val(c.s,c.t).toFixed(3);
+    const out=[ans], seen=new Set([key(ans)]), vals=new Set([vkey(ans)]);
+    const add = c => { if(seen.has(key(c))||vals.has(vkey(c))) return false; seen.add(key(c)); vals.add(vkey(c)); out.push(c); return true; };
+    add({s:-ans.s, t:ans.t});
+    const wrong = shuffle(rand, TERMS.filter(t=>key({s:1,t})!==key({s:1,t:ans.t})));
+    let n=0; for(const t of wrong){ if(n>=2) break; if(add({s:ans.s,t})) n++; }
+    for(const t of wrong){ if(out.length>=5) break; add({s:-ans.s,t}); }
+    return shuffle(rand, out).map(c=>({...c, v:val(c.s,c.t), ok:c===ans}));
+  });
+  return pr;
+}
+
+// ---------- text
+function describe(pr){
+  const {P,Q,R,sP,sQ,sR,mode,phi,theta,F} = pr;
+  const first = mode==='plane'
+    ? `F makes ${phi}° with the ${PLANE[P]} plane and points to its ${sgnS(sP)}${AX[P]} side.`
+    : `F makes ${phi}° with the ${sgnS(sP)}${AX[P]} axis.`;
+  const second = `The projection of F onto the ${PLANE[P]} plane makes ${theta}° with the ${sgnS(sQ)}${AX[Q]} axis, on the ${sgnS(sR)}${AX[R]} side.`;
+  return [`F = ${F} N acts at the origin O.`, first, second];
+}
+function solutionHTML(pr){
+  const {P,Q,R,sP,sQ,sR,mode,phi,theta,F,aP,aPerp,comp} = pr;
+  const c = k => `F<sub>${AX[k]}</sub>`, neg = s => s<0?'−':'';
+  const f1 = mode==='plane'?'sin':'cos', f2 = mode==='plane'?'cos':'sin';
+  const step1 = mode==='plane'
+    ? `F makes ${phi}° with the ${PLANE[P]} plane, on the ${sgnS(sP)}${AX[P]} side, so ${c(P)} is ${sP<0?'negative':'positive'}. The angle is measured from the plane, so the axis component takes sin φ.`
+    : `F makes ${phi}° with the ${sgnS(sP)}${AX[P]} axis, so ${c(P)} is ${sP<0?'negative':'positive'}. The angle is measured from the axis, so the axis component takes cos φ.`;
+  return `<h3>Solution</h3>
+  <h4>Step 1 · split along ${AX[P]}</h4>
+  <p>${step1}</p>
+  <div class="eqs"><div>${c(P)} = ${neg(sP)}F ${f1} ${phi}° = ${neg(sP)}(${F} N)(${Math[f1](phi*deg).toFixed(4)}) = <b>${fmt(comp[P])} N</b></div>
+  <div>F′ = F ${f2} ${phi}° = (${F} N)(${Math[f2](phi*deg).toFixed(4)}) = ${aPerp.toFixed(1)} N &nbsp;(in the ${PLANE[P]} plane)</div></div>
+  <h4>Step 2 · split F′ in the ${PLANE[P]} plane</h4>
+  <p>F′ makes ${theta}° with the ${sgnS(sQ)}${AX[Q]} axis, so ${c(Q)} takes cos θ and is ${sQ<0?'negative':'positive'}. It leans toward the ${sgnS(sR)}${AX[R]} side, so ${c(R)} takes sin θ and is ${sR<0?'negative':'positive'}.</p>
+  <div class="eqs"><div>${c(Q)} = ${neg(sQ)}F′ cos ${theta}° = ${neg(sQ)}(${aPerp.toFixed(1)} N)(${Math.cos(theta*deg).toFixed(4)}) = <b>${fmt(comp[Q])} N</b></div>
+  <div>${c(R)} = ${neg(sR)}F′ sin ${theta}° = ${neg(sR)}(${aPerp.toFixed(1)} N)(${Math.sin(theta*deg).toFixed(4)}) = <b>${fmt(comp[R])} N</b></div></div>
+  <h4>Result</h4>
+  <div class="result">F = { ${fmt(comp[0])} <b>i</b> ${comp[1]<0?'−':'+'} ${Math.abs(comp[1]).toFixed(1)} <b>j</b> ${comp[2]<0?'−':'+'} ${Math.abs(comp[2]).toFixed(1)} <b>k</b> } N</div>
+  <p>Check: √(${comp.map(v=>v<0?`(${fmt(v)})²`:`${fmt(v)}²`).join(' + ')}) = ${Math.hypot(...comp).toFixed(1)} N = F ✓</p>`;
+}
+
+// ---------- UI
+let pr = null, revealed = false;
+function render(){
+  $('pnum').textContent = `Problem ${pr.seed}`;
+  $('given').innerHTML = `F = <b>${pr.F} N</b>`;
+  $('words').innerHTML = describe(pr).map(s=>`<li>${s}</li>`).join('');
+  $('questions').innerHTML = [0,1,2].map(k=>`
+    <fieldset id="q${k}"><legend>F<sub>${AX[k]}</sub> = ?</legend>
+      <div class="choices">${pr.choices[k].map((ch,i)=>`
+        <label class="choice" data-ok="${ch.ok}"><input type="radio" name="c${k}" id="c${k}-${i}" value="${i}"><span class="let">${'ABCDE'[i]}</span><span class="fx">${formula(ch,pr)}</span></label>`).join('')}
+      </div><p class="verdict" id="v${k}"></p></fieldset>`).join('');
+  $('solution').hidden = true; $('solution').innerHTML = ''; $('score').textContent = ''; revealed = false;
+  document.querySelectorAll('.choice input').forEach(inp=>inp.addEventListener('change',()=>{
+    const fs = inp.closest('fieldset'); fs.querySelectorAll('.choice').forEach(l=>l.classList.remove('right','wrong'));
+    const v = fs.querySelector('.verdict'); v.textContent=''; v.className='verdict';
+  }));
+  draw();
+}
+function check(){
+  let right=0, answered=0;
+  [0,1,2].forEach(k=>{
+    const fs=$('q'+k), sel=fs.querySelector('input:checked'), v=$('v'+k);
+    fs.querySelectorAll('.choice').forEach(l=>l.classList.remove('right','wrong'));
+    if(!sel){ v.textContent='Pick an answer.'; v.className='verdict'; return; }
+    answered++;
+    const lab = sel.closest('.choice'), ok = lab.dataset.ok==='true';
+    lab.classList.add(ok?'right':'wrong'); if(ok) right++;
+    v.textContent = ok ? 'Correct.' : 'Not this one. Check the trig function and the sign.';
+    v.className = 'verdict ' + (ok?'ok':'bad');
+  });
+  $('score').textContent = `${right} of 3 correct` + (answered<3 ? ` · ${3-answered} unanswered` : '');
+}
+function show(){
+  revealed = true;
+  [0,1,2].forEach(k=>{
+    const fs=$('q'+k);
+    fs.querySelectorAll('.choice').forEach(l=>{
+      const ok=l.dataset.ok==='true', chosen=l.querySelector('input').checked;
+      l.classList.toggle('right', ok); l.classList.toggle('wrong', chosen && !ok);
+    });
+    const v=$('v'+k); v.textContent = `Answer: F${AX[k]} = ${formula(pr.right[k],pr)} = ${fmt(pr.comp[k])} N`; v.className='verdict ok';
+  });
+  $('solution').innerHTML = solutionHTML(pr); $('solution').hidden = false;
+  draw();
+}
+function newSeed(){ return 10000 + Math.floor(Math.random()*90000); }
+function bestView(pr){        // stay near the textbook view, but avoid looking straight down F or its projections
+  const tip = pr.comp.map(v=>v/pr.F), h = tip.slice(); h[pr.P]=0; const q=[0,0,0]; q[pr.Q]=tip[pr.Q];
+  const segs = [[[0,0,0],tip],[[0,0,0],h],[h,tip],[[0,0,0],q],[q,h]];
+  let best = {...VIEW0}, bestScore = -1;
+  for(let az=-40; az<=130; az+=10) for(let el=10; el<=42; el+=8){
+    const A=az*deg, E=el*deg, rv=[-Math.sin(A),Math.cos(A),0],
+          ev=[Math.cos(E)*Math.cos(A),Math.cos(E)*Math.sin(A),Math.sin(E)],
+          uv=[ev[1]*rv[2]-ev[2]*rv[1], ev[2]*rv[0]-ev[0]*rv[2], ev[0]*rv[1]-ev[1]*rv[0]];
+    let score = Infinity;
+    for(const [a,b] of segs){ const d=sub3(b,a), L=Math.hypot(...d); if(L<1e-6) continue;
+      score = Math.min(score, Math.hypot(dot3(d,rv),dot3(d,uv))/L); }    // 1 = seen face-on, 0 = end-on
+    score -= 0.0015*Math.abs(az-30) + 0.0015*Math.abs(el-22);              // mild preference for the usual view
+    if(score>bestScore){ bestScore=score; best={az:A, el:E}; }
+  }
+  return best;
+}
+function load(seed){ pr = generate(seed); cam = {...bestView(pr), zoom:1}; try{ history.replaceState(null,'','#p'+seed); }catch(e){} render(); }
+$('check').onclick = check;
+$('show').onclick = show;
+$('next').onclick = () => { load(newSeed()); $('pnum').scrollIntoView({block:'nearest'}); };
+
+// ---------- 3D figure (orthographic, z up)
+const cv = $('fig'), ctx = cv.getContext('2d');
+const VIEW0 = {az:30*deg, el:22*deg};
+let cam = {az:VIEW0.az, el:VIEW0.el, zoom:1};
+let W=0, H=0, dpr=1;
+const add3=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], sub3=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],
+      mul3=(a,s)=>[a[0]*s,a[1]*s,a[2]*s], dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+      unit3=a=>{const L=Math.hypot(...a)||1; return mul3(a,1/L);}, e3=k=>{const v=[0,0,0]; v[k]=1; return v;};
+function slerpArc(u, w, r, n=24){                 // arc from unit u to unit w (angle < 180°)
+  const ang = Math.acos(Math.max(-1,Math.min(1,dot3(u,w))));
+  const perp = unit3(sub3(w, mul3(u, dot3(u,w))));
+  const pts=[]; for(let i=0;i<=n;i++){const t=ang*i/n; pts.push(add3(mul3(u,r*Math.cos(t)), mul3(perp,r*Math.sin(t))));}
+  return pts;
+}
+function resize(){ dpr=window.devicePixelRatio||1; const b=cv.getBoundingClientRect(); W=b.width; H=b.height;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); draw(); }
+function draw(){
+  if(!W||!H||!pr) return;
+  const cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim();
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle=col('--fig-bg'); ctx.fillRect(0,0,W,H);
+  const ca=Math.cos(cam.az), sa=Math.sin(cam.az), ce=Math.cos(cam.el), se=Math.sin(cam.el);
+  const ev=[ce*ca,ce*sa,se], rv=[-sa,ca,0], uv=[ev[1]*rv[2]-ev[2]*rv[1], ev[2]*rv[0]-ev[0]*rv[2], ev[0]*rv[1]-ev[1]*rv[0]];
+  const sc = cam.zoom*Math.min(W,H)/2.9;
+  const Pj = p => [W/2 + sc*dot3(p,rv), H*0.53 - sc*dot3(p,uv), dot3(p,ev)];
+
+  const {P,Q,R,sP,sQ,mode,phi,theta,F,comp} = pr;
+  const tip = mul3(comp, 1/F);                     // |F| drawn as 1 unit
+  const h = tip.slice(); h[P]=0;                   // projection onto the plane ⊥ P
+  const q = [0,0,0]; q[Q]=tip[Q];                  // foot on the axis θ is measured from
+  const r = [0,0,0]; r[R]=tip[R];
+  const p = [0,0,0]; p[P]=tip[P];
+  const O = [0,0,0];
+
+  const polys=[], lines=[], heads=[], labels=[];
+  // projection triangles
+  polys.push({pts:[O,h,tip], c:col('--fig-plane1')});
+  polys.push({pts:[O,q,h],   c:col('--fig-plane2')});
+  // axes
+  const axc = col('--fig-axis');
+  for(let k=0;k<3;k++){
+    lines.push({a:mul3(e3(k),-1.15), b:O, c:axc, w:1, dash:[4,4]});
+    lines.push({a:O, b:mul3(e3(k),1.35), c:axc, w:1.4, head:true});
+    labels.push({p:mul3(e3(k),1.5), s:AX[k], c:axc, font:'italic 600 18px Georgia,"Times New Roman",serif'});
+  }
+  labels.push({p:[0,0,0], s:'O', c:axc, font:'italic 600 15px Georgia,serif', off:[-14,12]});
+  // construction lines
+  const dc = col('--fig-dash');
+  lines.push({a:O,b:h,c:dc,w:1.5,dash:[6,4]});
+  lines.push({a:tip,b:h,c:dc,w:1.5,dash:[6,4]});
+  lines.push({a:q,b:h,c:dc,w:1.5,dash:[6,4]});
+  if(mode==='axis') lines.push({a:tip,b:p,c:dc,w:1.5,dash:[6,4]});
+  if(revealed){ lines.push({a:r,b:h,c:dc,w:1.2,dash:[3,4]}); if(mode!=='axis') lines.push({a:tip,b:p,c:dc,w:1.2,dash:[3,4]}); }
+  // right-angle marks at q (in the plane) and at h (between plane and F)
+  const mark=(corner, toA, toB, s=0.07)=>{const a=unit3(sub3(toA,corner)), b=unit3(sub3(toB,corner));
+    const p1=add3(corner,mul3(a,s)), p2=add3(p1,mul3(b,s)), p3=add3(corner,mul3(b,s));
+    lines.push({a:p1,b:p2,c:dc,w:1.2}); lines.push({a:p2,b:p3,c:dc,w:1.2});};
+  if(Math.hypot(...sub3(h,q))>0.08 && Math.hypot(...q)>0.08) mark(q, O, h);
+  if(Math.hypot(...sub3(tip,h))>0.08 && Math.hypot(...h)>0.08) mark(h, O, tip);
+  // angle arcs
+  const ac = col('--fig-arc');
+  const uh = unit3(h), uf = unit3(tip);
+  const phiFrom = mode==='plane' ? uh : mul3(e3(P), sP);
+  const a1 = slerpArc(phiFrom, uf, 0.42);
+  for(let i=0;i<a1.length-1;i++) lines.push({a:a1[i],b:a1[i+1],c:ac,w:2.2});
+  labels.push({p:mul3(unit3(a1[12]),0.55), s:`${phi}°`, c:ac, font:'600 15px system-ui,sans-serif'});
+  const r2 = Math.max(0.13, Math.min(0.3, 0.7*Math.hypot(...h)));      // keep the θ arc inside F′
+  const a2 = slerpArc(mul3(e3(Q), sQ), uh, r2);
+  for(let i=0;i<a2.length-1;i++) lines.push({a:a2[i],b:a2[i+1],c:ac,w:2.2});
+  labels.push({p:mul3(unit3(a2[12]),r2+0.13), s:`${theta}°`, c:ac, font:'600 15px system-ui,sans-serif'});
+  // the force
+  const fc = col('--fig-force');
+  lines.push({a:O,b:tip,c:fc,w:3.2,head:true});
+  labels.push({p:mul3(uf,1.16), s:`F = ${F} N`, c:fc, font:'600 15px system-ui,sans-serif'});
+  // components (after Show answer)
+  if(revealed){
+    for(let k=0;k<3;k++){
+      const v=[0,0,0]; v[k]=comp[k]/F; const c=col('--'+AX[k]);
+      lines.push({a:O,b:v,c,w:3,head:true});
+      // label beyond the arrow tip, pushed out far enough that short components don't pile up at O
+      const lp = mul3(e3(k), Math.sign(comp[k])*(Math.max(Math.abs(comp[k])/F, 0.45) + 0.2));
+      labels.push({p:lp, s:`F${AX[k]} = ${fmt(comp[k])} N`, c, font:'600 14px system-ui,sans-serif'});
+    }
+  }
+
+  // paint: planes, then lines back-to-front, then heads, then labels
+  polys.forEach(pg=>{const s=pg.pts.map(Pj); ctx.fillStyle=pg.c; ctx.beginPath(); ctx.moveTo(s[0][0],s[0][1]); s.slice(1).forEach(t=>ctx.lineTo(t[0],t[1])); ctx.closePath(); ctx.fill();});
+  lines.map(l=>({...l, A:Pj(l.a), B:Pj(l.b)})).sort((m,n)=>(m.A[2]+m.B[2])-(n.A[2]+n.B[2])).forEach(l=>{
+    ctx.strokeStyle=l.c; ctx.lineWidth=l.w; ctx.setLineDash(l.dash||[]); ctx.lineCap='round';
+    let B=l.B;
+    if(l.head){ const dx=l.B[0]-l.A[0], dy=l.B[1]-l.A[1], L=Math.hypot(dx,dy);
+      if(L>2){ const s=Math.min(14, L*0.4), ux=dx/L, uy=dy/L; B=[l.B[0]-ux*s*0.8, l.B[1]-uy*s*0.8];
+        heads.push({tip:l.B, ux, uy, s, c:l.c}); } }
+    ctx.beginPath(); ctx.moveTo(l.A[0],l.A[1]); ctx.lineTo(B[0],B[1]); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  heads.forEach(hd=>{const {tip:t,ux,uy,s}=hd; ctx.fillStyle=hd.c; ctx.beginPath(); ctx.moveTo(t[0],t[1]);
+    ctx.lineTo(t[0]-ux*s-uy*s*0.42, t[1]-uy*s+ux*s*0.42); ctx.lineTo(t[0]-ux*s+uy*s*0.42, t[1]-uy*s-ux*s*0.42); ctx.closePath(); ctx.fill();});
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  labels.forEach(lb=>{const s=Pj(lb.p), o=lb.off||[0,0]; ctx.font=lb.font; ctx.lineWidth=4; ctx.strokeStyle=col('--fig-bg');
+    ctx.strokeText(lb.s,s[0]+o[0],s[1]+o[1]); ctx.fillStyle=lb.c; ctx.fillText(lb.s,s[0]+o[0],s[1]+o[1]);});
+}
+// interaction
+const ptrs=new Map(); let last=null, pinch=null;
+cv.addEventListener('pointerdown',ev=>{cv.setPointerCapture(ev.pointerId); ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]); cv.classList.add('drag');
+  last={x:ev.clientX,y:ev.clientY};
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]), zoom:cam.zoom};}});
+cv.addEventListener('pointermove',ev=>{ if(!ptrs.has(ev.pointerId)) return; ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]);
+  if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()]; cam.zoom=Math.min(4,Math.max(0.5,pinch.zoom*Math.hypot(a[0]-b[0],a[1]-b[1])/pinch.d)); draw(); return;}
+  if(!last) return; const dx=ev.clientX-last.x, dy=ev.clientY-last.y; last.x=ev.clientX; last.y=ev.clientY;
+  cam.az-=dx*0.009; cam.el=Math.max(-1.5,Math.min(1.5,cam.el+dy*0.009)); draw();});
+const up=ev=>{ptrs.delete(ev.pointerId); if(ptrs.size<2) pinch=null; if(!ptrs.size){last=null; cv.classList.remove('drag');}};
+cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',ev=>{ev.preventDefault(); cam.zoom=Math.min(4,Math.max(0.5,cam.zoom*Math.exp(-ev.deltaY*0.0015))); draw();},{passive:false});
+cv.addEventListener('dblclick',()=>{cam={...bestView(pr),zoom:1}; draw();});
+$('reset-view').onclick=()=>{cam={...bestView(pr),zoom:1}; draw();};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+new ResizeObserver(resize).observe(cv);
+
+window.__forceQuiz = {generate, fmt, formula};   // used for automated checks
+// start: problem from the address (#p12345) or a new one
+const m = /^#p(\d{1,9})$/.exec(location.hash);
+load(m ? parseInt(m[1],10) : newSeed());
+resize();
+})();
+</script>
+</body>
+</html>
