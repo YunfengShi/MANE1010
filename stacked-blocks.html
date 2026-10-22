@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stacked Blocks with Friction · MANE 1010</title>
+<meta name="description" content="Simulation of block A on block B pushed by a force P, with friction on both surfaces. Change P, the masses and the friction coefficient.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: drafting sheet. Header, then the simulation figure with its controls underneath. */
+:root{
+  --paper:#f7f9fb; --sheet:#ffffff; --ink:#18232e; --muted:#5a6876; --rule:#d8e0e7;
+  --grid:rgba(47,111,159,.07); --accent:#b3102b; --link:#2f6f9f; --link-ink:#ffffff;
+  --fig-bg:#fbfcfd; --fig-A:#e8743b; --fig-B:#1a5f80; --fig-ground:#3a4652; --fig-force:#111820;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11171d; --sheet:#182029; --ink:#e4eaf0; --muted:#9aa8b5; --rule:#2c3946;
+    --grid:rgba(120,170,210,.06); --accent:#ff5a6e; --link:#7fb6e0; --link-ink:#0f161c;
+    --fig-bg:#141b22; --fig-A:#ef8a55; --fig-B:#3d93c2; --fig-ground:#aab6c2; --fig-force:#f2f5f8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11171d; --sheet:#182029; --ink:#e4eaf0; --muted:#9aa8b5; --rule:#2c3946;
+  --grid:rgba(120,170,210,.06); --accent:#ff5a6e; --link:#7fb6e0; --link-ink:#0f161c;
+  --fig-bg:#141b22; --fig-A:#ef8a55; --fig-B:#3d93c2; --fig-ground:#aab6c2; --fig-force:#f2f5f8;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;color:var(--ink);font:16px/1.6 var(--body);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:28px 40px}
+a{color:var(--link)}
+.home{font:500 14px var(--mono);letter-spacing:.04em;text-decoration:none}
+.home:hover{text-decoration:underline}
+header{display:grid;gap:8px;padding:18px 0 22px;border-bottom:2px solid var(--ink)}
+h1{margin:0;font:700 clamp(30px,5vw,46px)/1.08 var(--display);text-wrap:balance}
+.lede{margin:0;max-width:66ch;color:var(--muted)}
+sub{font-size:.72em}
+
+.sim{margin-top:28px;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:16px 18px 18px}
+canvas{display:block;width:100%;height:clamp(170px,34vw,260px);background:var(--fig-bg);border:1px solid var(--rule);border-radius:6px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 28px;margin-top:16px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:14.5px;color:var(--muted);margin-bottom:4px}
+.ctl output{color:var(--ink);font:500 14px var(--mono);font-variant-numeric:tabular-nums}
+.ctl input{width:100%;accent-color:var(--link)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+button{font:600 14.5px var(--body);border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--rule);background:var(--sheet);color:var(--ink)}
+button:hover{border-color:var(--link)}
+button.primary{background:var(--link);border-color:var(--link);color:var(--link-ink);min-width:86px}
+button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="./">← MANE 1010</a>
+  <header>
+    <h1>Stacked Blocks with Friction</h1>
+    <p class="lede">Block A rests on block B, and force P pushes B. The same friction coefficient &mu; acts on both surfaces. Set P, the two masses and &mu;, then press Play.</p>
+  </header>
+
+  <section class="sim">
+    <canvas id="sim" aria-label="Block A resting on block B, which is pushed by force P"></canvas>
+    <div class="controls">
+      <div class="ctl"><label for="P">Force P <output id="Pv"></output></label>
+        <input type="range" id="P" min="0" max="400" step="1" value="150"></div>
+      <div class="ctl"><label for="mA">Mass of A <output id="mAv"></output></label>
+        <input type="range" id="mA" min="1" max="100" step="1" value="50"></div>
+      <div class="ctl"><label for="mB">Mass of B <output id="mBv"></output></label>
+        <input type="range" id="mB" min="1" max="100" step="1" value="25"></div>
+      <div class="ctl"><label for="mu">Friction coefficient &mu; <output id="muv"></output></label>
+        <input type="range" id="mu" min="0" max="0.5" step="0.01" value="0.15"></div>
+    </div>
+    <div class="actions">
+      <button id="play" class="primary">Play</button>
+      <button id="reset">Reset</button>
+    </div>
+  </section>
+
+  <footer>MANE 1010 · Essence of Engineering Mechanics · Rensselaer Polytechnic Institute</footer>
+</div>
+
+<script>
+(() => {
+  const par = { P: 150, mA: 50, mB: 25, mu: 0.15 };
+
+  // ===== ENGINE START =====
+  // 2D rigid boxes with rotation, contact and Coulomb friction (sequential impulses,
+  // after Box2D-Lite). World units: m, kg, s; x to the right, y up.
+  const L = 1.0, hB = 0.32, hA = 0.30, VIEW = 9, DT = 1 / 480;
+
+  const V = (x, y) => ({ x, y });
+  const add = (a, b) => V(a.x + b.x, a.y + b.y);
+  const sub = (a, b) => V(a.x - b.x, a.y - b.y);
+  const mul = (s, a) => V(s * a.x, s * a.y);
+  const dot = (a, b) => a.x * b.x + a.y * b.y;
+  const crossVV = (a, b) => a.x * b.y - a.y * b.x;
+  const crossSV = (s, a) => V(-s * a.y, s * a.x);
+  const crossVS = (a, s) => V(s * a.y, -s * a.x);
+  const absV = v => V(Math.abs(v.x), Math.abs(v.y));
+  const rotM = t => { const c = Math.cos(t), s = Math.sin(t); return { c1: V(c, s), c2: V(-s, c) }; };
+  const mv = (m, v) => V(m.c1.x * v.x + m.c2.x * v.y, m.c1.y * v.x + m.c2.y * v.y);
+  const tr = m => ({ c1: V(m.c1.x, m.c2.x), c2: V(m.c1.y, m.c2.y) });
+  const mm = (a, b) => ({ c1: mv(a, b.c1), c2: mv(a, b.c2) });
+  const absM = m => ({ c1: absV(m.c1), c2: absV(m.c2) });
+
+  function setMass(b, mass) {
+    if (mass === Infinity) { b.invMass = 0; b.invI = 0; return; }
+    b.invMass = 1 / mass;
+    b.invI = 12 / (mass * (b.size.x * b.size.x + b.size.y * b.size.y));
+  }
+  function makeBody(w, h, mass, x, y) {
+    const b = { size: V(w, h), pos: V(x, y), rot: 0, vel: V(0, 0), omega: 0, force: V(0, 0), torque: 0, friction: par.mu };
+    setMass(b, mass);
+    return b;
+  }
+
+  const E1 = 1, E2 = 2, E3 = 3, E4 = 4;
+  const cvx = (v, in2, out2) => ({ v, fp: { in1: 0, out1: 0, in2, out2 } });
+
+  function clipSeg(vIn, n, offset, clipEdge) {
+    const out = [];
+    const d0 = dot(n, vIn[0].v) - offset, d1 = dot(n, vIn[1].v) - offset;
+    if (d0 <= 0) out.push(vIn[0]);
+    if (d1 <= 0) out.push(vIn[1]);
+    if (d0 * d1 < 0) {
+      const t = d0 / (d0 - d1);
+      const v = add(vIn[0].v, mul(t, sub(vIn[1].v, vIn[0].v)));
+      const fp = d0 > 0 ? { ...vIn[0].fp, in1: clipEdge, in2: 0 } : { ...vIn[1].fp, out1: clipEdge, out2: 0 };
+      out.push({ v, fp });
+    }
+    return out;
+  }
+
+  function incidentEdge(h, pos, R, normal) {
+    const n = mul(-1, mv(tr(R), normal));
+    const na = absV(n);
+    let c;
+    if (na.x > na.y) {
+      c = n.x >= 0 ? [cvx(V(h.x, -h.y), E3, E4), cvx(V(h.x, h.y), E4, E1)]
+                   : [cvx(V(-h.x, h.y), E1, E2), cvx(V(-h.x, -h.y), E2, E3)];
+    } else {
+      c = n.y >= 0 ? [cvx(V(h.x, h.y), E4, E1), cvx(V(-h.x, h.y), E1, E2)]
+                   : [cvx(V(-h.x, -h.y), E2, E3), cvx(V(h.x, -h.y), E3, E4)];
+    }
+    c.forEach(p => { p.v = add(pos, mv(R, p.v)); });
+    return c;
+  }
+
+  function collide(A, B) {
+    const hA = mul(0.5, A.size), hBx = mul(0.5, B.size);
+    const RA = rotM(A.rot), RB = rotM(B.rot), RAT = tr(RA), RBT = tr(RB);
+    const dp = sub(B.pos, A.pos), dA = mv(RAT, dp), dB = mv(RBT, dp);
+    const absC = absM(mm(RAT, RB)), absCT = tr(absC);
+    const faceA = sub(sub(absV(dA), hA), mv(absC, hBx));
+    if (faceA.x > 0 || faceA.y > 0) return [];
+    const faceB = sub(sub(absV(dB), mv(absCT, hA)), hBx);
+    if (faceB.x > 0 || faceB.y > 0) return [];
+
+    let axis = 0, sep = faceA.x, normal = dA.x > 0 ? RA.c1 : mul(-1, RA.c1);
+    if (faceA.y > 0.95 * sep + 0.01 * hA.y) { axis = 1; sep = faceA.y; normal = dA.y > 0 ? RA.c2 : mul(-1, RA.c2); }
+    if (faceB.x > 0.95 * sep + 0.01 * hBx.x) { axis = 2; sep = faceB.x; normal = dB.x > 0 ? RB.c1 : mul(-1, RB.c1); }
+    if (faceB.y > 0.95 * sep + 0.01 * hBx.y) { axis = 3; sep = faceB.y; normal = dB.y > 0 ? RB.c2 : mul(-1, RB.c2); }
+
+    let frontN, front, sideN, s, negSide, posSide, negEdge, posEdge, inc;
+    if (axis === 0) {
+      frontN = normal; front = dot(A.pos, frontN) + hA.x; sideN = RA.c2; s = dot(A.pos, sideN);
+      negSide = -s + hA.y; posSide = s + hA.y; negEdge = E3; posEdge = E1; inc = incidentEdge(hBx, B.pos, RB, frontN);
+    } else if (axis === 1) {
+      frontN = normal; front = dot(A.pos, frontN) + hA.y; sideN = RA.c1; s = dot(A.pos, sideN);
+      negSide = -s + hA.x; posSide = s + hA.x; negEdge = E2; posEdge = E4; inc = incidentEdge(hBx, B.pos, RB, frontN);
+    } else if (axis === 2) {
+      frontN = mul(-1, normal); front = dot(B.pos, frontN) + hBx.x; sideN = RB.c2; s = dot(B.pos, sideN);
+      negSide = -s + hBx.y; posSide = s + hBx.y; negEdge = E3; posEdge = E1; inc = incidentEdge(hA, A.pos, RA, frontN);
+    } else {
+      frontN = mul(-1, normal); front = dot(B.pos, frontN) + hBx.y; sideN = RB.c1; s = dot(B.pos, sideN);
+      negSide = -s + hBx.x; posSide = s + hBx.x; negEdge = E2; posEdge = E4; inc = incidentEdge(hA, A.pos, RA, frontN);
+    }
+    const c1 = clipSeg(inc, mul(-1, sideN), negSide, negEdge);
+    if (c1.length < 2) return [];
+    const c2 = clipSeg(c1, sideN, posSide, posEdge);
+    if (c2.length < 2) return [];
+
+    const out = [];
+    for (const p of c2) {
+      const sp = dot(frontN, p.v) - front;
+      if (sp <= 0) {
+        let fp = p.fp;
+        if (axis >= 2) fp = { in1: fp.in2, out1: fp.out2, in2: fp.in1, out2: fp.out1 };
+        out.push({ pos: sub(p.v, mul(sp, frontN)), normal, sep: sp,
+                   key: fp.in1 + 5 * fp.out1 + 25 * fp.in2 + 125 * fp.out2, Pn: 0, Pt: 0 });
+      }
+    }
+    return out;
+  }
+
+  function preStep(a, invDt) {
+    const b1 = a.b1, b2 = a.b2;
+    for (const c of a.contacts) {
+      const r1 = sub(c.pos, b1.pos), r2 = sub(c.pos, b2.pos);
+      const rn1 = dot(r1, c.normal), rn2 = dot(r2, c.normal);
+      c.massN = 1 / (b1.invMass + b2.invMass + b1.invI * (dot(r1, r1) - rn1 * rn1) + b2.invI * (dot(r2, r2) - rn2 * rn2));
+      const t = crossVS(c.normal, 1);
+      const rt1 = dot(r1, t), rt2 = dot(r2, t);
+      c.massT = 1 / (b1.invMass + b2.invMass + b1.invI * (dot(r1, r1) - rt1 * rt1) + b2.invI * (dot(r2, r2) - rt2 * rt2));
+      c.bias = -0.2 * invDt * Math.min(0, c.sep + 0.005);
+      const P = add(mul(c.Pn, c.normal), mul(c.Pt, t));
+      b1.vel = sub(b1.vel, mul(b1.invMass, P)); b1.omega -= b1.invI * crossVV(r1, P);
+      b2.vel = add(b2.vel, mul(b2.invMass, P)); b2.omega += b2.invI * crossVV(r2, P);
+    }
+  }
+
+  function applyImpulse(a) {
+    const b1 = a.b1, b2 = a.b2;
+    for (const c of a.contacts) {
+      const r1 = sub(c.pos, b1.pos), r2 = sub(c.pos, b2.pos);
+      let dv = sub(add(b2.vel, crossSV(b2.omega, r2)), add(b1.vel, crossSV(b1.omega, r1)));
+      const vn = dot(dv, c.normal);
+      const Pn0 = c.Pn;
+      c.Pn = Math.max(Pn0 + c.massN * (-vn + c.bias), 0);
+      const Pn = mul(c.Pn - Pn0, c.normal);
+      b1.vel = sub(b1.vel, mul(b1.invMass, Pn)); b1.omega -= b1.invI * crossVV(r1, Pn);
+      b2.vel = add(b2.vel, mul(b2.invMass, Pn)); b2.omega += b2.invI * crossVV(r2, Pn);
+
+      dv = sub(add(b2.vel, crossSV(b2.omega, r2)), add(b1.vel, crossSV(b1.omega, r1)));
+      const t = crossVS(c.normal, 1);
+      const vt = dot(dv, t);
+      const maxPt = a.friction * c.Pn, Pt0 = c.Pt;
+      c.Pt = Math.max(-maxPt, Math.min(maxPt, Pt0 - c.massT * vt));
+      const Pt = mul(c.Pt - Pt0, t);
+      b1.vel = sub(b1.vel, mul(b1.invMass, Pt)); b1.omega -= b1.invI * crossVV(r1, Pt);
+      b2.vel = add(b2.vel, mul(b2.invMass, Pt)); b2.omega += b2.invI * crossVV(r2, Pt);
+    }
+  }
+
+  let ground, blockA, blockB, bodies, arbiters;
+
+  function worldStep(dt) {
+    for (let i = 0; i < bodies.length; i++) for (let j = i + 1; j < bodies.length; j++) {
+      const b1 = bodies[i], b2 = bodies[j], key = i + ':' + j;
+      const cs = collide(b1, b2);
+      if (!cs.length) { arbiters.delete(key); continue; }
+      let a = arbiters.get(key);
+      if (a) {
+        for (const c of cs) { const o = a.contacts.find(q => q.key === c.key); if (o) { c.Pn = o.Pn; c.Pt = o.Pt; } }
+        a.contacts = cs;
+      } else {
+        a = { b1, b2, contacts: cs };
+        arbiters.set(key, a);
+      }
+      a.friction = Math.sqrt(b1.friction * b2.friction);
+    }
+    for (const b of bodies) {
+      if (b.invMass === 0) continue;
+      b.vel = add(b.vel, mul(dt, add(V(0, -9.81), mul(b.invMass, b.force))));
+      b.omega += dt * b.invI * b.torque;
+    }
+    for (const a of arbiters.values()) preStep(a, 1 / dt);
+    for (let k = 0; k < 30; k++) for (const a of arbiters.values()) applyImpulse(a);
+    for (const b of bodies) {
+      b.pos = add(b.pos, mul(dt, b.vel));
+      b.rot += dt * b.omega;
+      b.force = V(0, 0); b.torque = 0;
+    }
+  }
+
+  function pushPoint() { return add(blockB.pos, mv(rotM(blockB.rot), V(L / 2, 0))); }
+
+  function simStep(dt) {
+    const p = pushPoint(), F = V(-par.P, 0);
+    blockB.force = add(blockB.force, F);
+    blockB.torque += crossVV(sub(p, blockB.pos), F);
+    worldStep(dt);
+  }
+
+  function build() {
+    ground = makeBody(1000, 1, Infinity, VIEW / 2, -0.5);
+    blockB = makeBody(L, hB, par.mB, VIEW - 1.3, hB / 2);
+    blockA = makeBody(L, hA, par.mA, VIEW - 1.3, hB + hA / 2);
+    bodies = [ground, blockB, blockA];
+    arbiters = new Map();
+    const P = par.P;
+    par.P = 0;
+    for (let i = 0; i < 240; i++) simStep(DT);
+    par.P = P;
+  }
+
+  function updateMaterials() {
+    setMass(blockA, par.mA);
+    setMass(blockB, par.mB);
+    for (const b of bodies) b.friction = par.mu;
+  }
+
+  function rightEdge(b) {
+    const c = Math.abs(Math.cos(b.rot)), s = Math.abs(Math.sin(b.rot));
+    return b.pos.x + c * b.size.x / 2 + s * b.size.y / 2;
+  }
+
+  let viewLeft = 0;   // world x at the left edge of the canvas (set when drawing)
+
+  function finished() {
+    const aStill = Math.hypot(blockA.vel.x, blockA.vel.y) < 1e-3 && Math.abs(blockA.omega) < 1e-3;
+    return rightEdge(blockB) < viewLeft && (rightEdge(blockA) < viewLeft || aStill);
+  }
+  // ===== ENGINE END =====
+
+  const $ = id => document.getElementById(id);
+  const C = {};
+  let ctx, W, H, running = false, last = null, acc = 0;
+
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    ['--fig-bg', '--fig-A', '--fig-B', '--fig-ground', '--fig-force'].forEach(k => C[k] = cs.getPropertyValue(k).trim());
+  }
+
+  function drawBox(b, color, label, ppm, gy) {
+    const w = b.size.x * ppm, h = b.size.y * ppm;
+    ctx.save();
+    ctx.translate((b.pos.x - viewLeft) * ppm, gy - b.pos.y * ppm);
+    ctx.rotate(-b.rot);
+    ctx.fillStyle = color; ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.strokeStyle = C['--fig-ground']; ctx.lineWidth = 1.5; ctx.strokeRect(-w / 2, -h / 2, w, h);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'italic 600 17px Georgia, "Times New Roman", serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, -w / 2 + 8, 0);
+    ctx.restore();
+  }
+
+  function drawPush(ppm, gy) {
+    const p = pushPoint();
+    if (par.P <= 0 || p.x < viewLeft) return;
+    const xHead = (p.x - viewLeft) * ppm + 2, y = gy - p.y * ppm, xTail = xHead + 0.6 * ppm;
+    ctx.strokeStyle = C['--fig-force']; ctx.fillStyle = C['--fig-force']; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(xTail, y); ctx.lineTo(xHead + 10, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xHead, y); ctx.lineTo(xHead + 13, y - 6); ctx.lineTo(xHead + 13, y + 6); ctx.closePath(); ctx.fill();
+    ctx.font = 'italic 600 17px Georgia, "Times New Roman", serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('P', (xHead + xTail) / 2, y - 8);
+  }
+
+  function draw() {
+    if (!ctx) return;
+    ctx.fillStyle = C['--fig-bg']; ctx.fillRect(0, 0, W, H);
+    const ppm = Math.min(110, W / 4.5), gy = H - 40;   // phones zoom in and show a shorter stretch of track
+    viewLeft = VIEW - W / ppm;
+
+    ctx.strokeStyle = C['--fig-ground'];
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 12; x <= W + 12; x += 12) { ctx.moveTo(x, gy); ctx.lineTo(x - 10, gy + 12); }
+    ctx.stroke();
+
+    drawBox(blockB, C['--fig-B'], 'B', ppm, gy);
+    drawPush(ppm, gy);
+    drawBox(blockA, C['--fig-A'], 'A', ppm, gy);
+  }
+
+  function fit() {
+    const cv = $('sim'), dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(r.width * dpr));
+    cv.height = Math.max(1, Math.round(r.height * dpr));
+    ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    W = r.width; H = r.height;
+  }
+
+  function setPlaying(on) {
+    running = on;
+    $('play').textContent = on ? 'Pause' : 'Play';
+  }
+
+  function frame(ts) {
+    if (running) {
+      if (last === null) last = ts;
+      acc += Math.min(0.05, (ts - last) / 1000);
+      last = ts;
+      while (acc >= DT) {
+        simStep(DT);
+        acc -= DT;
+        if (finished()) { setPlaying(false); acc = 0; break; }
+      }
+    } else {
+      last = null;
+    }
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function syncLabels() {
+    $('Pv').textContent = par.P + ' N';
+    $('mAv').textContent = par.mA + ' kg';
+    $('mBv').textContent = par.mB + ' kg';
+    $('muv').textContent = par.mu.toFixed(2);
+  }
+
+  ['P', 'mA', 'mB', 'mu'].forEach(id => $(id).addEventListener('input', e => {
+    par[id] = parseFloat(e.target.value);
+    syncLabels();
+    updateMaterials();
+  }));
+  $('play').addEventListener('click', () => {
+    if (!running && finished()) build();
+    setPlaying(!running);
+  });
+  $('reset').addEventListener('click', () => { setPlaying(false); build(); });
+
+  readColors();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  new ResizeObserver(fit).observe($('sim'));
+  fit();
+  build();
+  syncLabels();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
