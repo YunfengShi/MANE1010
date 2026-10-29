@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pushing a Dresser · MANE 1010</title>
+<meta name="description" content="A mover pushes a dresser with a force F at an angle θ below horizontal. Find the smallest F that moves the dresser and the friction the mover's shoes need. Change θ and both friction coefficients.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: drafting sheet. Header, then the figure, its controls, and the forces read off as F ramps up. */
+:root{
+  --paper:#f7f9fb; --sheet:#ffffff; --ink:#18232e; --muted:#5a6876; --rule:#d8e0e7;
+  --grid:rgba(47,111,159,.07); --link:#2f6f9f; --link-ink:#ffffff;
+  --fig-bg:#fbfcfd; --fig-wood:#d4ad98; --fig-wood-dark:#8f6550; --fig-ground:#3a4652; --fig-force:#111820;
+  --fig-skin:#e9b48f; --fig-shirt:#f2a35e; --fig-jeans:#3f8fc4; --fig-jeans-far:#2b6a96; --fig-shoe:#6b4a35;
+  --fig-W:#2f6f9f; --fig-N:#1f8a4c; --fig-f:#b3102b; --ok:#1f8a4c; --warn:#b3102b;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11171d; --sheet:#182029; --ink:#e4eaf0; --muted:#9aa8b5; --rule:#2c3946;
+    --grid:rgba(120,170,210,.06); --link:#7fb6e0; --link-ink:#0f161c;
+    --fig-bg:#141b22; --fig-wood:#b48a73; --fig-wood-dark:#6e4c3b; --fig-ground:#aab6c2; --fig-force:#f2f5f8;
+    --fig-skin:#d9a27c; --fig-shirt:#e0904a; --fig-jeans:#4f9fd4; --fig-jeans-far:#33739f; --fig-shoe:#a0765a;
+    --fig-W:#7fb6e0; --fig-N:#5fd08f; --fig-f:#ff6b7d; --ok:#5fd08f; --warn:#ff6b7d;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11171d; --sheet:#182029; --ink:#e4eaf0; --muted:#9aa8b5; --rule:#2c3946;
+  --grid:rgba(120,170,210,.06); --link:#7fb6e0; --link-ink:#0f161c;
+  --fig-bg:#141b22; --fig-wood:#b48a73; --fig-wood-dark:#6e4c3b; --fig-ground:#aab6c2; --fig-force:#f2f5f8;
+  --fig-skin:#d9a27c; --fig-shirt:#e0904a; --fig-jeans:#4f9fd4; --fig-jeans-far:#33739f; --fig-shoe:#a0765a;
+  --fig-W:#7fb6e0; --fig-N:#5fd08f; --fig-f:#ff6b7d; --ok:#5fd08f; --warn:#ff6b7d;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;color:var(--ink);font:16px/1.6 var(--body);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(20px, env(safe-area-inset-left, 0px));padding-right:max(20px, env(safe-area-inset-right, 0px));padding-block:28px 40px}
+a{color:var(--link)}
+.home{font:500 14px var(--mono);letter-spacing:.04em;text-decoration:none}
+.home:hover{text-decoration:underline}
+header{display:grid;gap:8px;padding:18px 0 22px;border-bottom:2px solid var(--ink)}
+h1{margin:0;font:700 clamp(30px,5vw,46px)/1.08 var(--display);text-wrap:balance}
+.lede{margin:0;max-width:72ch;color:var(--muted)}
+sub{font-size:.72em}
+
+.sim{margin-top:28px;background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:16px 18px 18px}
+canvas{display:block;width:100%;height:clamp(330px,46vw,440px);background:var(--fig-bg);border:1px solid var(--rule);border-radius:6px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 28px;margin-top:16px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:14.5px;color:var(--muted);margin-bottom:4px}
+.ctl output{color:var(--ink);font:500 14px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ctl input{width:100%;accent-color:var(--link)}
+.actions{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:16px;align-items:center}
+button{font:600 14.5px var(--body);border-radius:6px;padding:9px 16px;cursor:pointer;border:1px solid var(--rule);background:var(--sheet);color:var(--ink)}
+button:hover{border-color:var(--link)}
+button.primary{background:var(--link);border-color:var(--link);color:var(--link-ink);min-width:86px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+.check{display:flex;align-items:center;gap:8px;font-size:14.5px;color:var(--muted);cursor:pointer}
+.check input{accent-color:var(--link);width:16px;height:16px;margin:0}
+
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px}
+.panel{border:1px solid var(--rule);border-radius:6px;padding:12px 14px;min-width:0}
+.panel h2{margin:0 0 8px;font:600 15px/1.3 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.eq{font:500 14px/1.75 var(--mono);font-variant-numeric:tabular-nums;overflow-x:auto}
+.eq b{font-weight:500}
+.status{margin-top:16px;font-weight:600;min-height:1.6em}
+.status.ok{color:var(--ok)} .status.warn{color:var(--warn)}
+footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="./">← MANE 1010</a>
+  <header>
+    <h1>Pushing a Dresser</h1>
+    <p class="lede">A mover weighing 150 lbf tries to start a 90 lbf dresser into motion, pushing with a force F directed at an angle &theta; below the horizontal. Set the push F, its angle &theta; and the friction coefficients, then press Play: the dresser stays put, the dresser slides, or the mover's shoes slip.</p>
+  </header>
+
+  <section class="sim">
+    <canvas id="sim" aria-label="A mover pushing a dresser with force F at angle theta below horizontal, with free-body diagram forces"></canvas>
+    <div class="controls">
+      <div class="ctl"><label for="Fp">Push force F <output id="Fv"></output></label>
+        <input type="range" id="Fp" min="0" max="150" step="0.1" value="20"></div>
+      <div class="ctl"><label for="th"><span>Push angle &theta; below horizontal</span> <output id="thv"></output></label>
+        <input type="range" id="th" min="0" max="50" step="1" value="30"></div>
+      <div class="ctl"><label for="mu"><span>Dresser–floor &mu;<sub>s</sub></span> <output id="muv"></output></label>
+        <input type="range" id="mu" min="0" max="1" step="0.01" value="0.25"></div>
+      <div class="ctl"><label for="mm"><span>Shoes–floor &mu;<sub>s</sub></span> <output id="mmv"></output></label>
+        <input type="range" id="mm" min="0" max="1" step="0.01" value="0.40"></div>
+    </div>
+    <div class="actions">
+      <button id="play" class="primary">Play</button>
+      <button id="reset">Reset</button>
+      <label class="check"><input type="checkbox" id="fbd" checked> Show forces</label>
+    </div>
+
+    <div class="results">
+      <div class="panel">
+        <h2>Dresser (W = 90 lbf)</h2>
+        <div class="eq" id="dres"></div>
+      </div>
+      <div class="panel">
+        <h2>Mover (W = 150 lbf)</h2>
+        <div class="eq" id="mov"></div>
+      </div>
+    </div>
+    <div class="status" id="status" role="status"></div>
+  </section>
+
+  <footer>MANE 1010 · Essence of Engineering Mechanics · Rensselaer Polytechnic Institute</footer>
+</div>
+
+<script>
+(() => {
+  // Units: ft, lbf, s.  F acts on the dresser along the mover's arms, θ below the horizontal, toward the dresser.
+  const WD = 90, WM = 150;                        // dresser and mover weights (lbf)
+  const DW = 5.0, DH = 3.0;                        // dresser width and height (ft)
+  const par = { F: 20, th: 30, mu: 0.25, mm: 0.40 };
+
+  // Dresser: F cosθ = μ (W + F sinθ)  →  F = μW / (cosθ − μ sinθ); no finite F if cosθ ≤ μ sinθ (self-locking)
+  // Mover:   F cosθ = μm (WM − F sinθ) →  shoes slip at F = μm WM / (cosθ + μm sinθ)
+  function thresholds() {
+    const t = par.th * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
+    const dd = c - par.mu * s;
+    const Fmove = dd > 1e-9 ? par.mu * WD / dd : Infinity;
+    const Fslip = par.mm * WM / (c + par.mm * s);
+    return { c, s, Fmove, Fslip };
+  }
+
+  // ---------- state ----------
+  let F = 0, phase = 'rest', shift = 0, vel = 0, slipBack = 0, running = false, last = null;
+  const G = 32.174, VMAX = 3.0;                     // ft/s²; the mover's top walking speed (ft/s)
+  // phase: 'rest' (not started) | 'held' (nothing moves) | 'moving' (dresser slides) | 'slipped' (mover's shoes slip)
+  function reset() {
+    F = par.F; phase = 'rest'; shift = 0; vel = 0; slipBack = 0; setPlaying(false);
+    plantFeet();
+    update();
+  }
+
+  const $ = id => document.getElementById(id);
+  const C = {};
+  let ctx, Wc, Hc, ppm = 40, gy = 0, x0 = 0;
+
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    ['--fig-bg', '--fig-wood', '--fig-wood-dark', '--fig-ground', '--fig-force', '--fig-skin', '--fig-shirt', '--fig-jeans', '--fig-jeans-far', '--fig-shoe',
+     '--fig-W', '--fig-N', '--fig-f', '--muted'].forEach(k => C[k] = cs.getPropertyValue(k).trim());
+  }
+  const sx = x => x0 + x * ppm, sy = y => gy - y * ppm;
+
+  function arrow(x1, y1, x2, y2, color, width) {
+    const a = Math.atan2(y2 - y1, x2 - x1), hl = 12;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width || 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - hl * 0.8 * Math.cos(a), y2 - hl * 0.8 * Math.sin(a)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - hl * Math.cos(a) + 6 * Math.sin(a), y2 - hl * Math.sin(a) - 6 * Math.cos(a));
+    ctx.lineTo(x2 - hl * Math.cos(a) - 6 * Math.sin(a), y2 - hl * Math.sin(a) + 6 * Math.cos(a));
+    ctx.closePath(); ctx.fill();
+  }
+  function label(text, x, y, color, align, base) {
+    ctx.font = 'italic 600 15px Georgia, "Times New Roman", serif';
+    ctx.textAlign = align || 'center'; ctx.textBaseline = base || 'middle';
+    ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.strokeStyle = C['--fig-bg']; ctx.strokeText(text, x, y);
+    ctx.fillStyle = color; ctx.fillText(text, x, y);
+  }
+  const fmt = v => v.toFixed(1);
+
+  // ---------- figure ----------
+  function drawDresser(xl) {
+    const X = sx(xl), Y = sy(DH), w = DW * ppm, h = DH * ppm, top = 0.16 * ppm;
+    ctx.fillStyle = C['--fig-wood']; ctx.strokeStyle = C['--fig-wood-dark']; ctx.lineWidth = 1.5;
+    ctx.fillRect(X + 0.12 * ppm, Y + top, w - 0.24 * ppm, h - top); ctx.strokeRect(X + 0.12 * ppm, Y + top, w - 0.24 * ppm, h - top);
+    ctx.fillRect(X - 0.08 * ppm, Y, w + 0.16 * ppm, top); ctx.strokeRect(X - 0.08 * ppm, Y, w + 0.16 * ppm, top);
+    // drawers: three columns, three rows
+    const cols = 3, rows = 3, pad = 0.1 * ppm, x1 = X + 0.12 * ppm + pad, y1 = Y + top + pad;
+    const cw = (w - 0.24 * ppm - pad * (cols + 1)) / cols, rh = (h - top - pad * (rows + 1)) / rows;
+    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+      const dx = x1 + i * (cw + pad), dy = y1 + j * (rh + pad);
+      ctx.strokeRect(dx, dy, cw, rh);
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(dx + cw / 2 - 0.22 * ppm, dy + rh / 2 - 0.05 * ppm, 0.44 * ppm, 0.1 * ppm, 0.05 * ppm)
+                                     : ctx.rect(dx + cw / 2 - 0.22 * ppm, dy + rh / 2 - 0.05 * ppm, 0.44 * ppm, 0.1 * ppm);
+      ctx.stroke();
+    }
+  }
+
+  // two-segment limb from a to b with segment lengths l1, l2, knee/elbow bent toward `bend` (+1 or −1)
+  function limb(a, b, l1, l2, bend) {
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.min(Math.hypot(dx, dy), l1 + l2 - 1e-6);
+    const t = Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d))));
+    const base = Math.atan2(dy, dx) + bend * t;
+    return { x: a.x + l1 * Math.cos(base), y: a.y + l1 * Math.sin(base) };
+  }
+  function seg(points, color, width) {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(sx(p.x), sy(p.y)) : ctx.moveTo(sx(p.x), sy(p.y))); ctx.stroke();
+  }
+  // mover geometry in ft; hands at the dresser's top-left corner, arms along F
+  // Upper body: hands on the dresser's top corner and the shoulder up the push line, so F runs along the arms.
+  // A tall push (large θ) bends the elbows instead of lifting the shoulder above standing height.
+  const LEG = 3.2, ARM = 2.35, TORSO = 2.0, FOOT_Y = 0.12, SH_MAX = 4.85;
+  function upperBody(xl) {
+    const t = par.th * Math.PI / 180;
+    const hand = { x: xl - 0.05, y: DH + 0.02 };
+    const d = t > 1e-6 ? Math.min(ARM, (SH_MAX - hand.y) / Math.sin(t)) : ARM;
+    const sh = { x: hand.x - d * Math.cos(t), y: hand.y + d * Math.sin(t) };
+    // natural lean keeps the hips near standing height; a flat push makes the mover bend over
+    const hipY = Math.min(2.9, sh.y - 0.6);
+    const lean = Math.acos(Math.min(1, (sh.y - hipY) / TORSO));
+    const dir0 = { x: -Math.sin(lean), y: -Math.cos(lean) };             // shoulder → hip
+    const hip = { x: sh.x + TORSO * dir0.x, y: sh.y + TORSO * dir0.y };
+    return { hand, sh, hip, dir0, t };
+  }
+  // full pose: the torso swings about the shoulder toward the back foot only as far as the legs need to reach the feet
+  // (brace > 0 swings it a little anyway, as the mover leans into a growing push)
+  function moverPose(xl, brace) {
+    const u = upperBody(xl), back = feet[0].x <= feet[1].x ? feet[0] : feet[1], front = back === feet[0] ? feet[1] : feet[0];
+    const tx = back.x - u.sh.x, ty = back.y + 0.6 - u.sh.y, tl = Math.hypot(tx, ty) || 1;
+    const hipAt = s => {
+      const vx = u.dir0.x * (1 - s) + (tx / tl) * s, vy = u.dir0.y * (1 - s) + (ty / tl) * s, vl = Math.hypot(vx, vy) || 1;
+      return { x: u.sh.x + TORSO * vx / vl, y: u.sh.y + TORSO * vy / vl };
+    };
+    let hip = hipAt(brace);
+    for (let s = brace; s <= 1.0001; s += 0.02) {
+      hip = hipAt(s);
+      if ([back, front].every(f => Math.hypot(hip.x - f.x, hip.y - f.y) <= LEG - 0.02)) break;
+    }
+    const up = { x: u.sh.x - hip.x, y: u.sh.y - hip.y }, ul = Math.hypot(up.x, up.y);
+    const head = { x: u.sh.x + 0.5 * up.x / ul, y: u.sh.y + 0.5 * up.y / ul };
+    return { hand: u.hand, sh: u.sh, hip, head, back, front, near: feet[0], far: feet[1], t: u.t };
+  }
+  // Gait: the legs alternate, half a cycle apart. Each foot is planted for half the cycle while the hips pass over it,
+  // then swings forward along an arc. The gait phase advances with the distance covered, and the step lengthens with
+  // speed, so the cadence follows the dresser's acceleration: slow short steps at first, longer and quicker ones later.
+  let feet = [{ x: 0, y: FOOT_Y }, { x: 0, y: FOOT_Y }], gait = 0.5;
+  const stepLen = v => Math.min(3.0, 1.4 + 0.35 * v);                // ft per step
+  function placeFeet(v, back = 0) {                                 // back: how far the stance has slid behind the hips
+    const hip = upperBody(shift).hip, S = stepLen(v), center = hip.x - 0.35 - back, lift = Math.min(0.6, 0.25 + 0.05 * v);
+    for (let i = 0; i < 2; i++) {
+      const p = ((gait + i / 2) % 1 + 1) % 1;
+      if (p < 0.5) feet[i] = { x: center + S / 2 - (p / 0.5) * S, y: FOOT_Y };                       // planted
+      else { const q = (p - 0.5) / 0.5; feet[i] = { x: center - S / 2 + S * (0.5 - 0.5 * Math.cos(Math.PI * q)), y: FOOT_Y + lift * Math.sin(Math.PI * q) }; }
+    }
+  }
+  function plantFeet() { gait = 0.5; placeFeet(0); }                 // one foot back, one forward, both on the floor
+  function walk(dt, v) {
+    gait += v * dt / (2 * stepLen(v));                                // one cycle = two steps
+    placeFeet(v);
+  }
+  function drawMover(p) {
+    const legW = Math.max(6, 0.32 * ppm), armW = Math.max(4, 0.2 * ppm);
+    // far leg drawn darker and first, near leg on top, so the alternating steps read clearly; knees bend forward
+    for (const [f, col] of [[p.far, C['--fig-jeans-far']], [p.near, C['--fig-jeans']]]) {
+      const knee = limb(p.hip, f, 1.6, 1.6, 1);
+      seg([p.hip, knee, f], col, legW);
+      ctx.fillStyle = C['--fig-shoe'];
+      ctx.beginPath(); ctx.ellipse(sx(f.x + 0.18), sy(f.y - FOOT_Y + 0.07), 0.3 * ppm, 0.09 * ppm, 0, 0, 2 * Math.PI); ctx.fill();
+    }
+    seg([p.hip, p.sh], C['--fig-shirt'], Math.max(10, 0.55 * ppm));     // torso
+    const elbow = limb(p.sh, p.hand, 1.2, 1.15, -1);                 // elbows bend down and back
+    seg([p.sh, elbow, p.hand], C['--fig-shirt'], armW);
+    ctx.fillStyle = C['--fig-skin'];
+    ctx.beginPath(); ctx.arc(sx(p.hand.x), sy(p.hand.y), Math.max(3, 0.12 * ppm), 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx(p.head.x), sy(p.head.y), Math.max(7, 0.36 * ppm), 0, 2 * Math.PI); ctx.fill();
+  }
+
+  function drawAngle(p) {
+    // horizontal reference through the hands, the push direction, and the angle θ between them
+    const L = Math.max(70, 2.6 * ppm), hx = sx(p.hand.x), hy = sy(p.hand.y);
+    ctx.strokeStyle = C['--muted']; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(hx - L * 1.25, hy); ctx.lineTo(hx + 8, hy); ctx.stroke();
+    if (par.th > 0) {
+      const r = L * 0.95;
+      ctx.beginPath(); ctx.arc(hx, hy, r, Math.PI, Math.PI + p.t, false); ctx.stroke();
+      const am = Math.PI + p.t / 2;
+      label('θ = ' + par.th + '°', hx + (r + 10) * Math.cos(am), hy + (r + 10) * Math.sin(am), C['--muted'], 'right');
+    }
+  }
+  function drawPush(p) {
+    // F on the dresser, drawn along the arm and ending at the hands
+    const L = Math.max(70, 2.6 * ppm), hx = sx(p.hand.x), hy = sy(p.hand.y);
+    const tx = hx - L * Math.cos(p.t), ty = hy - L * Math.sin(p.t);
+    arrow(tx, ty, hx - 2, hy - 1, C['--fig-force'], 3.5);
+    label('F' + (F > 0 ? ' = ' + fmt(F) + ' lbf' : ''), tx + (hx - tx) * 0.4 + 10 * Math.sin(p.t), ty + (hy - ty) * 0.4 - 12, C['--fig-force'], 'left');
+  }
+
+  function drawForces(xl, p, th) {
+    if (!$('fbd').checked) return;
+    const L = Math.max(42, 1.25 * ppm), { c, s } = th;
+    // dresser: weight at its middle, normal and friction from the floor
+    const cx = sx(xl + DW / 2), cy = sy(DH / 2);
+    arrow(cx, cy, cx, cy + L, C['--fig-W'], 3); label('90 lbf', cx + 8, cy + L - 4, C['--fig-W'], 'left');
+    const Nd = WD + F * s, fd = phase === 'moving' ? par.mu * Nd : F * c;
+    const nx = sx(xl + DW * 0.62);
+    arrow(nx, gy + L + 6, nx, gy + 2, C['--fig-N'], 3); label('N = ' + fmt(Nd), nx + 8, gy + L - 4, C['--fig-N'], 'left');
+    if (fd > 0.05) { const fx = sx(xl + DW * 0.3); arrow(fx + L * 0.4, gy + 10, fx - L * 0.6, gy + 10, C['--fig-f'], 3); label('f = ' + fmt(fd), fx - L * 0.6 - 4, gy + 12, C['--fig-f'], 'right'); }
+    // mover: weight at the hips, normal and friction under the feet (friction pushes the mover forward)
+    const Nm = WM - F * s, fm = phase === 'slipped' ? par.mm * Nm : F * c;
+    const hx = sx(p.hip.x), hy = sy(p.hip.y);
+    arrow(hx, hy, hx, hy + L, C['--fig-W'], 3); label('150 lbf', hx + 8, hy + L - 4, C['--fig-W'], 'left');
+    const fxm = sx((p.back.x + p.front.x) / 2);
+    arrow(fxm, gy + L + 6, fxm, gy + 2, C['--fig-N'], 3); label('N = ' + fmt(Nm), fxm + 8, gy + L - 4, C['--fig-N'], 'left');
+    if (fm > 0.05) { arrow(fxm - L * 0.5, gy + 10, fxm + L * 0.5, gy + 10, C['--fig-f'], 3); label('f = ' + fmt(fm), fxm + L * 0.5 + 4, gy + 12, C['--fig-f'], 'left'); }
+  }
+
+  function draw() {
+    if (!ctx) return;
+    ctx.fillStyle = C['--fig-bg']; ctx.fillRect(0, 0, Wc, Hc);
+    ppm = Math.min((Hc - 110) / 6.8, Wc / 15.5);
+    gy = 34 + 6.6 * ppm;
+    x0 = Math.max(10, 6.9 * ppm);                                  // room behind the mover for a slip                                     // world x = 0 at the dresser's starting left edge
+    ctx.strokeStyle = C['--fig-ground']; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(Wc, gy); ctx.stroke();
+    ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = 12; x <= Wc + 12; x += 12) { ctx.moveTo(x, gy); ctx.lineTo(x - 10, gy + 12); }
+    ctx.stroke();
+    const th = thresholds(), xl = shift;
+    // brace: lean a little further into a harder push
+    const brace = 0.15 * Math.min(1, F / 60);
+    const pose = moverPose(xl, brace);
+    drawDresser(xl);
+    drawMover(pose);
+    drawAngle(pose);
+    drawPush(pose);
+    drawForces(xl, pose, th);
+  }
+
+  // ---------- readouts ----------
+  function update() {
+    const th = thresholds(), { c, s } = th;
+    const Nd = WD + F * s, need = F * c, avail = par.mu * Nd;
+    const Nm = WM - F * s, needM = F * c, ratio = Nm > 0 ? needM / Nm : Infinity;
+    $('dres').innerHTML =
+      `Push F = <b>${fmt(F)} lbf</b>${phase === 'moving' ? ` · speed <b>${vel.toFixed(2)} ft/s</b>` : ''}<br>` +
+      `Normal N = 90 + F sin&theta; = <b>${fmt(Nd)} lbf</b><br>` +
+      (phase === 'moving'
+        ? `Sliding friction &mu;N = <b>${fmt(avail)} lbf</b><br>Net push F cos&theta; − &mu;N = <b>${fmt(need - avail)} lbf</b> · moved <b>${shift.toFixed(1)} ft</b>`
+        : `Friction needed F cos&theta; = <b>${fmt(need)} lbf</b><br>Friction available &mu;<sub>s</sub>N = <b>${fmt(avail)} lbf</b>`);
+    $('mov').innerHTML =
+      `Normal N = 150 − F sin&theta; = <b>${fmt(Nm)} lbf</b><br>` +
+      `Friction needed F cos&theta; = <b>${fmt(needM)} lbf</b><br>` +
+      `Friction available &mu;<sub>s</sub>N = <b>${fmt(par.mm * Nm)} lbf</b><br>` +
+      `Shoes need &mu;<sub>s</sub> ≥ f/N = <b>${isFinite(ratio) ? ratio.toFixed(3) : '—'}</b>`;
+    const st = $('status');
+    st.className = 'status';
+    const f2 = v => v.toFixed(2);                                    // two decimals, so close calls read correctly
+    if (phase === 'moving') { st.className = 'status ok'; st.textContent = `The dresser slides: F cos θ = ${f2(need)} lbf is more than μsN = ${f2(avail)} lbf, so it accelerates at ${((need - avail) * G / WD).toFixed(2)} ft/s².`; }
+    else if (phase === 'slipped') { st.className = 'status warn'; st.textContent = Nm <= 0 ? `The mover's shoes slip: F sin θ lifts the mover off the floor.` : `The mover's shoes slip: they need F cos θ = ${f2(needM)} lbf of friction, but μsN = ${f2(par.mm * Nm)} lbf.`; }
+    else if (phase === 'held') { st.className = 'status'; st.textContent = `Nothing moves: the dresser needs ${f2(need)} lbf of friction and the floor can give up to ${f2(avail)} lbf.`; }
+    else st.textContent = 'Set F and press Play.';
+  }
+
+  function step(dt) {
+    const th = thresholds();
+    if (phase === 'moving') {
+      // dresser dynamics with the push held at F (sliding friction uses the same μ): m a = F cosθ − μ (W + F sinθ)
+      const a = (F * th.c - par.mu * (WD + F * th.s)) * G / WD;
+      vel += a * dt;
+      shift += vel * dt;
+      walk(dt, vel);
+      if (sx(upperBody(shift).hip.x) > Wc + 20) setPlaying(false);
+    } else if (phase === 'slipped') {
+      // the hands stay on the dresser while the mover scrambles: the legs keep stepping alternately, but each planted
+      // shoe slides backward on the floor instead of gripping, so the stance drifts back and the body sinks toward a plank
+      const v = 1.1 * dt * Math.max(0.15, 1 - slipBack / 1.8), scramble = 2.0;
+      slipBack += v;
+      gait += scramble * dt / (2 * stepLen(scramble));
+      placeFeet(scramble, slipBack);
+      if (slipBack > 1.75) setPlaying(false);
+    }
+  }
+
+  function fit() {
+    const cv = $('sim'), dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(r.width * dpr));
+    cv.height = Math.max(1, Math.round(r.height * dpr));
+    ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    Wc = r.width; Hc = r.height;
+    draw();
+  }
+  function setPlaying(on) { running = on; $('play').textContent = on ? 'Pause' : 'Play'; }
+  // Advance by the wall-clock time since the last tick. Ticks come from requestAnimationFrame, and from a timer
+  // as a fallback, because some embedded viewers pause or never deliver animation frames.
+  let lastTick = 0;
+  function tick() {
+    const now = performance.now();
+    if (running) {
+      if (last === null) last = now;
+      let dt = Math.min(0.15, (now - last) / 1000); last = now;
+      try {
+        while (dt > 1e-6 && running) { const h = Math.min(0.02, dt); step(h); dt -= h; }   // small steps for a smooth gait
+        update();
+      } catch (err) { console.error(err); setPlaying(false); }
+    } else last = null;
+    try { draw(); } catch (err) { console.error(err); }
+    lastTick = now;
+  }
+  function frame() { tick(); requestAnimationFrame(frame); }
+  setInterval(() => { if (performance.now() - lastTick > 45) tick(); }, 25);
+
+  function syncLabels() {
+    $('Fv').textContent = par.F.toFixed(1) + ' lbf';
+    $('thv').textContent = par.th + '°';
+    $('muv').textContent = par.mu.toFixed(2);
+    $('mmv').textContent = par.mm.toFixed(2);
+  }
+  [['Fp', 'F'], ['th', 'th'], ['mu', 'mu'], ['mm', 'mm']].forEach(([id, key]) => $(id).addEventListener('input', e => {
+    par[key] = parseFloat(e.target.value);
+    syncLabels();
+    reset();
+  }));
+  $('play').addEventListener('click', () => {
+    if (!running && phase !== 'rest') reset();
+    if (phase === 'rest') {
+      // as the push builds up to F, whichever limit it reaches first decides: the dresser breaking free or the shoes slipping
+      const { Fmove, Fslip } = thresholds();
+      phase = F <= 0 ? 'held' : F >= Fmove - 1e-9 && Fmove <= Fslip ? 'moving' : F >= Fslip - 1e-9 && Fslip < Fmove ? 'slipped' : 'held';
+    }
+    setPlaying(phase !== 'held' && !running);
+    update();
+  });
+  $('reset').addEventListener('click', reset);
+  $('fbd').addEventListener('change', draw);
+
+  readColors();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  new ResizeObserver(fit).observe($('sim'));
+  syncLabels();
+  reset();
+  fit();
+  requestAnimationFrame(frame);
+  window.__dresser = { par, thresholds, get F() { return F; }, get phase() { return phase; }, get vel() { return vel; } };
+})();
+</script>
+</body>
+</html>
