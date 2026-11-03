@@ -75,11 +75,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--link);outline-o
 .status{margin-top:16px;font-weight:600;min-height:1.6em}
 .status.ok{color:var(--ok)} .status.warn{color:var(--warn)}
 footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:13.5px}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 18px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="home" href="./">← MANE 1010</a>
+  <nav class="crumbs" aria-label="Course and group"><a class="home" href="./">← MANE 1010</a><a class="home" href="https://yunfengshi.github.io/ShiGroup/">Shi Group</a></nav>
   <header>
     <h1>Pulling Out a Wedge</h1>
     <p class="lede">A 300 lb crate sits on a wedge of negligible weight, with its left side against a wall. The wedge rests on a slope at angle &alpha; and a horizontal force P acts on it: positive P pulls to the left, negative P pushes to the right. The same static friction coefficient &mu;<sub>s</sub> acts at every contact. Set P, &alpha; and &mu;<sub>s</sub>, then press Play: nothing moves, the wedge comes out and the crate drops along the wall (slipping at all four surfaces), or a large enough push drives the wedge and crate up the slope together.</p>

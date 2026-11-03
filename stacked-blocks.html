@@ -59,11 +59,12 @@ button:hover{border-color:var(--link)}
 button.primary{background:var(--link);border-color:var(--link);color:var(--link-ink);min-width:86px}
 button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:13.5px}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 18px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="home" href="./">← MANE 1010</a>
+  <nav class="crumbs" aria-label="Course and group"><a class="home" href="./">← MANE 1010</a><a class="home" href="https://yunfengshi.github.io/ShiGroup/">Shi Group</a></nav>
   <header>
     <h1>Stacked Blocks with Friction</h1>
     <p class="lede">Block A rests on block B, and force P pushes B. The same friction coefficient &mu; acts on both surfaces. Set P, the two masses and &mu;, then press Play.</p>
