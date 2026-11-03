@@ -75,11 +75,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--link);outline-o
 .status{margin-top:16px;font-weight:600;min-height:1.6em}
 .status.ok{color:var(--ok)} .status.warn{color:var(--warn)}
 footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:13.5px}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 18px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="home" href="./">← MANE 1010</a>
+  <nav class="crumbs" aria-label="Course and group"><a class="home" href="./">← MANE 1010</a><a class="home" href="https://yunfengshi.github.io/ShiGroup/">Shi Group</a></nav>
   <header>
     <h1>Pushing a Dresser</h1>
     <p class="lede">A mover weighing 150 lbf tries to start a 90 lbf dresser into motion, pushing with a force F directed at an angle &theta; below the horizontal. Set the push F, its angle &theta; and the friction coefficients, then press Play: the dresser stays put, the dresser slides, or the mover's shoes slip.</p>

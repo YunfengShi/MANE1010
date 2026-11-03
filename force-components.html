@@ -113,11 +113,12 @@ button.small{font-size:13px;padding:5px 10px;font-weight:500}
 .result{font-family:var(--math);font-size:17px;margin:8px 0 2px;overflow-x:auto}
 footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted);font-size:13.5px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 18px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="home" href="./">← MANE 1010</a>
+  <nav class="crumbs" aria-label="Course and group"><a class="home" href="./">← MANE 1010</a><a class="home" href="https://yunfengshi.github.io/ShiGroup/">Shi Group</a></nav>
   <header>
     <h1>Force Components from Two Angles</h1>
     <p class="lede">A force in 3D is often given by two angles: one that tilts it out of a coordinate plane, and one that sets its direction inside that plane. Pick the expression for each component, sign included.</p>

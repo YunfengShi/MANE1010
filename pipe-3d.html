@@ -12,6 +12,7 @@ html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);font-fam
 .pv{display:flex;flex-direction:column;height:100%;min-height:420px;box-sizing:border-box}
 .pv-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--rule)}
 .pv-title{font-weight:600;font-size:15px;margin-right:auto;white-space:nowrap}
+@media (max-width:560px){.pv-title{white-space:normal}}
 .pv-home{color:var(--btn-on);text-decoration:none;font-weight:500;margin-right:10px;padding-right:10px;border-right:1px solid var(--rule)}
 .pv-home:hover{text-decoration:underline}
 .pv-title span{font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -76,7 +77,7 @@ html,body{height:100%;margin:0;background:var(--paper);color:var(--ink);font-fam
 </style>
 <div class="pv">
   <div class="pv-bar">
-    <div class="pv-title"><a class="pv-home" href="./">← MANE 1010</a>Pipe A–B–C <span>· F = 80 N at C</span></div>
+    <div class="pv-title"><a class="pv-home" href="./">← MANE 1010</a><a class="pv-home" href="https://yunfengshi.github.io/ShiGroup/">Shi Group</a>Pipe A–B–C <span>· F = 80 N at C</span></div>
     <button id="pv-iso" type="button">Textbook view</button>
     <button id="pv-top" type="button">Top (x–y)</button>
     <button id="pv-side" type="button">Side (y–z)</button>
